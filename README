@@ -21,9 +21,9 @@ Run go.py in examples/ to see the magic.
 
 To save player data and game logs:
 * mysql -D DATABASE < sql/schema.sql
-* Create a 'db.cfg' file in your home directory with valid MySQLdb connection information
+* Create a '.db.cfg' file in your home directory with valid MySQLdb connection information
  - http://mysql-python.sourceforge.net/MySQLdb.html
- - Check examples/db.cfg for example
+ - Check examples/.db.cfg for example
 
 
 YE CAVEATS

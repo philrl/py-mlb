@@ -198,7 +198,7 @@ class Player:
 
 	def _getDB(self):
 		config = ConfigParser.ConfigParser()
-		config.read(['db.cfg', os.path.expanduser('~/db.cfg')])
+		config.read(['.db.cfg', os.path.expanduser('~/.db.cfg')])
 
 		simplefilter("error", MySQLdb.Warning)
 		
