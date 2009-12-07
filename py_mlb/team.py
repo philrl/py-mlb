@@ -17,7 +17,7 @@ class Team:
 		for key, value in attributes.iteritems():
 			setattr(self, key, value)
 	
-	def fetchRoster(self):
+	def loadRoster(self):
 		"""
 		Calls MLB.com servers to obtain the complete roster for the team. UNFORTUNATELY it's using HTML parsing
 		"""

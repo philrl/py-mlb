@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 from fetcher import Fetcher
+from warnings import simplefilter
 import datetime
+import sys
+import MySQLdb
+import ConfigParser, os
 
 class Player:
 	"""A MLB player"""
@@ -12,10 +16,9 @@ class Player:
 		player_id : The MLB.com ID attribute for the given player
 		"""
 		self.player_id = player_id
-		self.logs = {}
-		self.totals = {}
+		self._logs = {}
+		self._totals = {}
 		self._categories = []
-		self._attributes = []
 		
 		if self.player_id is not None:
 			self.load()
@@ -24,7 +27,7 @@ class Player:
 		"""
 		Returns a list of player attribute names e.g. name_display_last_first
 		"""
-		return self._attributes
+		return [attr for attr in self.__dict__.keys() if not attr.startswith('_')]
 
 	def getCategories(self):
 		"""
@@ -67,7 +70,7 @@ class Player:
 				for key, value in row.iteritems():
 					log[key] = value
 
-				self.totals[int(row['season'])] = log
+				self._totals[int(row['season'])] = log
 			
 		# get career totals and set them as instance attributes
 		if self.primary_position == 1:
@@ -117,7 +120,7 @@ class Player:
 			
 				for key in row.keys():
 					key = str(key)
-					val = row[key]
+					val = str(row[key])
 					key = key.upper()
 					if val.isdigit():
 						log[key] = int(val)
@@ -127,15 +130,98 @@ class Player:
 						except ValueError:
 							log[key] = str(val)
 			
-				if year not in self.logs:
-					self.logs[year] = []
+				if year not in self._logs:
+					self._logs[year] = []
 
-				self.logs[year].append(log)
+				self._logs[year].append(log)
+
+	def saveGamelogs(self):
+		"""
+		Saves player game logs to database
+		"""
+		db = self._getDB()
+		
+		if db is None:
+			return False
+
+		cursor = db.cursor()
+		for year in self._logs.keys():
+			for log in self._logs[year]:
+				table = 'log_pitcher' if self.primary_position == 1 else 'log_batter'
+				sql = 'SELECT * FROM %s WHERE GAME_ID = \'%s\' AND PLAYER_ID = \'%s\'' % (table, log['GAME_ID'], self.player_id)
+				cursor.execute(sql)
+
+				if cursor.rowcount == 0:
+					log['PLAYER_ID'] = self.player_id
+
+					try:
+						sql = 'INSERT INTO %s (%s) VALUES (%s)' % (table, ','.join(log.keys()), ','.join(['%s'] * len(log.keys())))
+						cursor.execute(sql, log.values())
+					except MySQLdb.Warning, e:
+						pass
+
+		db.commit()
+		db.close()
+				
+	def save(self):
+		"""
+		Saves player information to database
+		"""
+		db = self._getDB()
+		
+		if db is None:
+			return False
+		
+		cursor = db.cursor()
+		sql = 'SELECT * FROM player WHERE player_id = %d' % self.player_id
+		cursor.execute(sql)
+
+		if cursor.rowcount == 0:
+			a = {}
+			for attr in [attr for attr in self.__dict__.keys() if not attr.startswith('_')]:
+				if attr.endswith('_date') and getattr(self, attr) == '' \
+				or attr == 'jersey_number' and getattr(self, attr) == '':
+					value = None
+				else:
+					value = getattr(self, attr)
+			
+				a[attr] = value
+				
+			try:
+				sql = 'INSERT INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
+				cursor.execute(sql, a.values())
+			except MySQLdb.Warning, e:
+				pass
+
+		db.commit()
+		db.close()
+
+	def _getDB(self):
+		config = ConfigParser.ConfigParser()
+		config.read(['db.cfg', os.path.expanduser('~/db.cfg')])
+
+		simplefilter("error", MySQLdb.Warning)
+		
+		if not config.has_section('db') \
+		or not config.has_option('db', 'db'):
+			return None
+		
+		c = {}
+		for key, value in config._sections['db'].iteritems():
+			if not key.startswith('__'):
+				c[key] = value
+		
+		try:
+			db = MySQLdb.connect(**c)
+		except MySQLdb.Error, e:
+			return None
+
+		return db
 
 	def load(self, id = None):
 		"""
 		Calls MLB.com server and loads player information
-		
+	
 		Arguments:
 		id : The MLB.com player ID
 		"""
@@ -146,11 +232,9 @@ class Player:
 
 		f = Fetcher(Fetcher.MLB_PLAYER_URL, player_id=self.player_id)
 		j = f.fetch()
-		
+	
 		records = j['player_info']['queryResults']['row']
 		for key, value in records.iteritems():
 			setattr(self, key, value)
-			self._attributes.append(key)
 
 		self.loadYearlies()
-		#self.loadGamelogs()

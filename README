@@ -9,11 +9,21 @@ YE REQUIREMENTS
 Python 2.6+
 BeautifulSoup http://www.crummy.com/software/BeautifulSoup/
 
+To save player data and game logs:
+MySQLDb
+MySQL 5.0 and up, maybe 4.x too - who knows?
+
 
 YE INSTRUCTIONS
 -
 python setup.py install
 Run go.py in examples/ to see the magic.
+
+To save player data and game logs:
+* mysql -D DATABASE < sql/schema.sql
+* Create a 'db.cfg' file in your home directory with valid MySQLdb connection information
+ - http://mysql-python.sourceforge.net/MySQLdb.html
+ - Check examples/db.cfg for example
 
 
 YE CAVEATS
@@ -26,7 +36,6 @@ YE TODO
 * Add an easy sorting mechanism to team and league
 * Better handle HTTP errors inside Fetcher
 * Add memcache support
-* Maybe persist stuff to database
 
 
 YE POINT OF CONTACT

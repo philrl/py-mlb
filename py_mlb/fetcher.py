@@ -21,7 +21,7 @@ class Fetcher:
 	MLB_PLAYER_URL = "http://mlb.com/lookup/json/named.player_info.bam" \
 		"?sport_code='mlb'&player_id='%player_id%'"
 	# pitcher gamelogs
-	MLB_PITCHER_URL = "http://com/lookup/json/named.mlb_bio_pitching_last_10.bam" \
+	MLB_PITCHER_URL = "http://mlb.com/lookup/json/named.mlb_bio_pitching_last_10.bam" \
 		"?results=100&game_type='R'&season=%year%&player_id=%player_id%"
 	# pitcher career and season totals
 	MLB_PITCHER_SUMMARY_URL = "http://mlb.com/lookup/json/named.mlb_bio_pitching_summary.bam" \
