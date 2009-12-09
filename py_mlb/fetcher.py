@@ -16,7 +16,7 @@ class Fetcher:
 	# URL for the league
 	MLB_LEAGUE_URL = "http://mlb.mlb.com/properties/mlb_properties.xml"
 	# roster for a particular team
-	MLB_ROSTER_URL = "http://mlb.com/team/roster_active.jsp?c_id=%team_code%"
+	MLB_ROSTER_URL = "http://mlb.mlb.com/lookup/json/named.roster_40.bam?team_id=%team_id%"
 	# player detail
 	MLB_PLAYER_URL = "http://mlb.com/lookup/json/named.player_info.bam" \
 		"?sport_code='mlb'&player_id='%player_id%'"
@@ -96,7 +96,7 @@ class Fetcher:
 			reqType = 'JSON'
 		else:
 			reqType = 'HTML'
-			
+
 		log.debug("fetching %s" % self.url)
 
 		try:

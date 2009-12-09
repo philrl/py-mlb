@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 from fetcher import Fetcher
-from warnings import simplefilter
+from db import DB
 import datetime
-import sys
-import MySQLdb
-import ConfigParser, os
 
 class Player:
 	"""A MLB player"""
@@ -139,44 +136,38 @@ class Player:
 		"""
 		Saves player game logs to database
 		"""
-		db = self._getDB()
-		
-		if db is None:
+		try:
+			db = DB()
+		except:
 			return False
 
-		cursor = db.cursor()
 		for year in self._logs.keys():
 			for log in self._logs[year]:
 				table = 'log_pitcher' if self.primary_position == 1 else 'log_batter'
 				sql = 'SELECT * FROM %s WHERE GAME_ID = \'%s\' AND PLAYER_ID = \'%s\'' % (table, log['GAME_ID'], self.player_id)
-				cursor.execute(sql)
+				db.execute(sql)
 
-				if cursor.rowcount == 0:
+				if db.rowcount == 0:
 					log['PLAYER_ID'] = self.player_id
 
-					try:
-						sql = 'INSERT INTO %s (%s) VALUES (%s)' % (table, ','.join(log.keys()), ','.join(['%s'] * len(log.keys())))
-						cursor.execute(sql, log.values())
-					except MySQLdb.Warning, e:
-						pass
+					sql = 'INSERT INTO %s (%s) VALUES (%s)' % (table, ','.join(log.keys()), ','.join(['%s'] * len(log.keys())))
+					db.execute(sql, log.values())
 
-		db.commit()
-		db.close()
+		db.save()
 				
 	def save(self):
 		"""
 		Saves player information to database
 		"""
-		db = self._getDB()
-		
-		if db is None:
+		try:
+			db = DB()
+		except:
 			return False
 		
-		cursor = db.cursor()
 		sql = 'SELECT * FROM player WHERE player_id = %d' % self.player_id
-		cursor.execute(sql)
+		db.execute(sql)
 
-		if cursor.rowcount == 0:
+		if db.rowcount == 0:
 			a = {}
 			for attr in [attr for attr in self.__dict__.keys() if not attr.startswith('_')]:
 				if attr.endswith('_date') and getattr(self, attr) == '' \
@@ -187,36 +178,10 @@ class Player:
 			
 				a[attr] = value
 				
-			try:
-				sql = 'INSERT INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
-				cursor.execute(sql, a.values())
-			except MySQLdb.Warning, e:
-				pass
+			sql = 'INSERT INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
+			db.execute(sql, a.values())
 
-		db.commit()
-		db.close()
-
-	def _getDB(self):
-		config = ConfigParser.ConfigParser()
-		config.read(['.db.cfg', os.path.expanduser('~/.db.cfg')])
-
-		simplefilter("error", MySQLdb.Warning)
-		
-		if not config.has_section('db') \
-		or not config.has_option('db', 'db'):
-			return None
-		
-		c = {}
-		for key, value in config._sections['db'].iteritems():
-			if not key.startswith('__'):
-				c[key] = value
-		
-		try:
-			db = MySQLdb.connect(**c)
-		except MySQLdb.Error, e:
-			return None
-
-		return db
+		db.save()
 
 	def load(self, id = None):
 		"""

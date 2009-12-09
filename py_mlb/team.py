@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from fetcher import Fetcher
-from BeautifulSoup import BeautifulSoup
-import re
+from db import DB
 import player
 
 class Team:
@@ -21,19 +20,20 @@ class Team:
 		"""
 		Calls MLB.com servers to obtain the complete roster for the team. UNFORTUNATELY it's using HTML parsing
 		"""
-		f = Fetcher(Fetcher.MLB_ROSTER_URL, team_code=self.team_code)
-		html = f.fetch()
+		f = Fetcher(Fetcher.MLB_ROSTER_URL, team_id=self.team_id)
+		j = f.fetch()
 		
-		soup = BeautifulSoup(f.fetch())
-		rows = soup.findAll('a')
+		if not j.has_key('roster_40'):
+			return
 		
-		for row in rows:
-			row = str(row)
-			matches = re.search(r'player_id\=(\d+?)"', row)
-			if matches:
-				player_id = int(matches.group(1))
+		parent = j['roster_40']['queryResults']
+		
+		if int(parent['totalSize']) > 0:
+			for record in parent['row']:
+				player_id = record['player_id']
 				self.roster[player_id] = player.Player(player_id)
 		
+
 	def getPlayer(self, player_id):
 		"""
 		Returns a player object, or None
@@ -45,3 +45,23 @@ class Team:
 			return self.roster[player_id]
 		else:
 			return None
+	
+	def save(self):
+		try:
+			db = DB()
+		except:
+			return False
+		
+		sql = 'SELECT * FROM team WHERE team_id = %d' % self.team_id
+		db.execute(sql)
+
+		if db.rowcount == 0:
+			a = {}
+			for attr in self.__dict__.keys():
+				if not attr == 'roster':
+					a['`%s`' % attr] = getattr(self, attr)
+			
+			sql = 'INSERT INTO team (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.keys())))
+			db.execute(sql, a.values())
+		
+		db.save()

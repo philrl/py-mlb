@@ -6,8 +6,7 @@ is a python abstraction library for that API.
 
 YE REQUIREMENTS
 -
-Python 2.6+
-BeautifulSoup http://www.crummy.com/software/BeautifulSoup/
+Python 2.6+ (2.5 will not work)
 
 To save player data and game logs:
 MySQLDb
