@@ -4,9 +4,8 @@ import json
 import libxml2
 import urllib2
 import sys
-import logging
 
-log = logging.getLogger(__name__)
+from . import logger
 
 class Fetcher:
 	"""
@@ -16,7 +15,8 @@ class Fetcher:
 	# URL for the league
 	MLB_LEAGUE_URL = "http://mlb.mlb.com/properties/mlb_properties.xml"
 	# roster for a particular team
-	MLB_ROSTER_URL = "http://mlb.mlb.com/lookup/json/named.roster_40.bam?team_id=%team_id%"
+	MLB_ROSTER_URL = "http://mlb.mlb.com/lookup/json/named.roster_40.bam" \
+		"?team_id=%team_id%"
 	# player detail
 	MLB_PLAYER_URL = "http://mlb.com/lookup/json/named.player_info.bam" \
 		"?sport_code='mlb'&player_id='%player_id%'"
@@ -32,6 +32,10 @@ class Fetcher:
 	# batter career and season totals
 	MLB_BATTER_SUMMARY_URL = "http://mlb.mlb.com/lookup/json/named.mlb_bio_hitting_summary.bam" \
 		"?game_type='R'&sort_by='season_asc'&player_id=%player_id%"
+		
+	# NOT YET USED
+	MLB_SCHEDULE_URL = "http://mlb.mlb.com/components/schedule/schedule_%date%.json"
+	MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam?sit_code=%27h0%27&season=2005&league_id=103&league_id=104"
 	
 	def __init__(self, url, **kwargs):
 		"""
@@ -97,24 +101,24 @@ class Fetcher:
 		else:
 			reqType = 'HTML'
 
-		log.debug("fetching %s" % self.url)
+		logger.debug("fetching %s" % self.url)
 
 		try:
 			res = urllib2.urlopen(req)
 		except urllib2.URLError, e:
-			log.debug("error fetching %s" % self.url)
+			logger.debug("error fetching %s" % self.url)
 			return []
 
 		if reqType == 'JSON':
 			# remove code comments that MLB puts in the response
 			content = re.sub('\/\*.+?\*\/', '', res.read())
-
+			
 			try:
 				obj = json.loads(content, parse_float=float, parse_int=int)
 				return self._parseJSON(obj)
 			except Exception, e:
 				# log the error and return an empty object
-				log.debug("errro fetching %s" % self.url)
+				logger.debug("errro fetching %s" % self.url)
 				return {}
 		elif reqType == 'XML':
 			"""

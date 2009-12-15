@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from fetcher import Fetcher
+from . import logger
 from db import DB
+
 import datetime
 
 class Player:
@@ -198,7 +200,12 @@ class Player:
 		f = Fetcher(Fetcher.MLB_PLAYER_URL, player_id=self.player_id)
 		j = f.fetch()
 	
-		records = j['player_info']['queryResults']['row']
+		try:
+			records = j['player_info']['queryResults']['row']
+		except KeyError, e:
+			logger.error("ERROR on %s: key %s not found" % (f.url, e))
+			return False
+
 		for key, value in records.iteritems():
 			setattr(self, key, value)
 
