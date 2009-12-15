@@ -93,6 +93,10 @@ class Player:
 		if year is None:
 			year = datetime.datetime.now().year
 		
+		if 'primary_position' not in self.__dict__:
+			logger.error("no primary position attribute for " % self.__dict__)
+			return False
+		
 		if self.primary_position == 1:
 			f = Fetcher(Fetcher.MLB_PITCHER_URL, player_id=self.player_id, year=year)
 		else:
@@ -203,7 +207,7 @@ class Player:
 		try:
 			records = j['player_info']['queryResults']['row']
 		except KeyError, e:
-			logger.error("ERROR on %s: key %s not found" % (f.url, e))
+			logger.error("ERROR on %s: key %s not found\n%s" % (f.url, e, j))
 			return False
 
 		for key, value in records.iteritems():

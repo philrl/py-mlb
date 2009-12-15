@@ -84,7 +84,7 @@ class Fetcher:
 			try:
 				val = float(val)
 			except ValueError:
-				val = str(val)
+				val = val
 		
 		return val
 
@@ -106,7 +106,7 @@ class Fetcher:
 		try:
 			res = urllib2.urlopen(req)
 		except urllib2.URLError, e:
-			logger.debug("error fetching %s" % self.url)
+			logger.error("error fetching %s" % self.url)
 			return []
 
 		if reqType == 'JSON':
@@ -114,11 +114,11 @@ class Fetcher:
 			content = re.sub('\/\*.+?\*\/', '', res.read())
 			
 			try:
-				obj = json.loads(content, parse_float=float, parse_int=int)
+				obj = json.loads(content)
 				return self._parseJSON(obj)
 			except Exception, e:
 				# log the error and return an empty object
-				logger.debug("errro fetching %s" % self.url)
+				logger.error("error parsing %s\n%s\n%s" % (self.url, e, content))
 				return {}
 		elif reqType == 'XML':
 			"""
