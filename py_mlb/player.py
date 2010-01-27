@@ -191,7 +191,7 @@ class Player:
 
 	def load(self, id = None):
 		"""
-		Calls MLB.com server and loads player information
+		Calls MLB.com server and loads player information. If call fails, '_error' property is set.
 	
 		Arguments:
 		id : The MLB.com player ID
