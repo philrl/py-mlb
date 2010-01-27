@@ -207,6 +207,7 @@ class Player:
 		try:
 			records = j['player_info']['queryResults']['row']
 		except KeyError, e:
+			self._error = "ERROR on %s: key %s not found\n%s" % (f.url, e, j)
 			logger.error("ERROR on %s: key %s not found\n%s" % (f.url, e, j))
 			return False
 
