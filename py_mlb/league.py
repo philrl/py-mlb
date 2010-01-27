@@ -27,4 +27,4 @@ class League:
 			t = team.Team(item)
 			if loadRosters:
 				t.loadRoster()
-			self.teams[t.team_code] = t			
+			self.teams[t.team_code] = t

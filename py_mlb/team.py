@@ -18,12 +18,13 @@ class Team:
 	
 	def loadRoster(self):
 		"""
-		Calls MLB.com servers to obtain the complete roster for the team. UNFORTUNATELY it's using HTML parsing
+		Calls MLB.com servers to obtain the complete roster for the team. If call fails, '_error' property is set.
 		"""
 		f = Fetcher(Fetcher.MLB_ROSTER_URL, team_id=self.team_id)
 		j = f.fetch()
 		
-		if not j.has_key('roster_40'):
+		if 'roster_40' not in j.keys():
+			self._error = "ERROR on %s: key roster_40 not found (cannot load 40 man roster)" % (f.url)			
 			return
 		
 		parent = j['roster_40']['queryResults']
