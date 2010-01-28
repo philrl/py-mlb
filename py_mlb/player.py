@@ -203,12 +203,26 @@ class Player:
 
 		f = Fetcher(Fetcher.MLB_PLAYER_URL, player_id=self.player_id)
 		j = f.fetch()
-	
+		
+		try:
+			records = j['player_info']['queryResults']['totalSize']
+		except KeyError, e:
+			msg = 'ERROR on %s: totalSize not returned for call' % f.url
+			self._error = msg
+			logger.error(msg)
+			return False
+
+		if records == 0:
+			msg = 'ERROR on %s: totalSize is 0' % f.url
+			self._error = msg
+			logger.error(msg)
+			return False
+
 		try:
 			records = j['player_info']['queryResults']['row']
 		except KeyError, e:
-			self._error = "ERROR on %s: key %s not found" % (f.url, e)
-			logger.error("ERROR on %s: key %s not found\n%s" % (f.url, e, j))
+			self._error = 'ERROR on %s: key %s not found' % (f.url, e)
+			logger.error('ERROR on %s: key %s not found\n%s' % (f.url, e, j))
 			return False
 
 		for key, value in records.iteritems():

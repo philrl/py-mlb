@@ -35,7 +35,8 @@ class Fetcher:
 		
 	# NOT YET USED
 	MLB_SCHEDULE_URL = "http://mlb.mlb.com/components/schedule/schedule_%date%.json"
-	MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam?sit_code=%27h0%27&season=2005&league_id=103&league_id=104"
+	MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam" \
+		"?sit_code=%27h0%27&season=2005&league_id=103&league_id=104"
 	
 	def __init__(self, url, **kwargs):
 		"""
@@ -47,6 +48,7 @@ class Fetcher:
 		for key in kwargs.keys():
 			url = url.replace('%%%s%%' % key, str(kwargs[key]))
 		
+		# get rid of any unmatched %key% fields
 		url = re.sub('%%.+?%%', '', url)
 		self.url = url
 
