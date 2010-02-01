@@ -109,7 +109,7 @@ class Fetcher:
 			res = urllib2.urlopen(req)
 		except urllib2.URLError, e:
 			logger.error("error fetching %s" % self.url)
-			return []
+			return {}
 
 		if reqType == 'JSON':
 			# remove code comments that MLB puts in the response
