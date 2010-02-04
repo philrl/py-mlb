@@ -5,7 +5,7 @@ import libxml2
 import urllib2
 import sys
 
-from . import logger
+from . import logger, parseJSON, formatValue
 
 class Fetcher:
 	"""
@@ -52,45 +52,7 @@ class Fetcher:
 		url = re.sub('%%.+?%%', '', url)
 		self.url = url
 
-	def _parseJSON(self, obj):
-		"""
-		Recursively parses a JSON object to properly cast ints and floats
-		
-		Arguments:
-		obj : The JSON object
-		"""
-		newobj = {}
-
-		for key, value in obj.iteritems():
-			key = str(key)
-
-			if isinstance(value, dict):
-				newobj[key] = self._parseJSON(value)
-			elif isinstance(value, list):
-				if key not in newobj:
-					newobj[key] = []
-					for i in value:
-						newobj[key].append(self._parseJSON(i))
-			elif isinstance(value, unicode):
-				newobj[key] = self._formatValue(value)
-			
-		return newobj
-
-	def _formatValue(self, val):
-		"""
-		Returns a properly casted variable for val
-		"""
-		if val.isdigit():
-			val = int(val)
-		else:
-			try:
-				val = float(val)
-			except ValueError:
-				val = val
-		
-		return val
-
-	def fetch(self):
+	def fetch(self, returnRaw = False):
 		"""
 		Makes the HTTP request to the MLB.com server and handles the response
 		"""
@@ -111,13 +73,16 @@ class Fetcher:
 			logger.error("error fetching %s" % self.url)
 			return {}
 
+		if returnRaw:
+			return res.read()
+
 		if reqType == 'JSON':
 			# remove code comments that MLB puts in the response
 			content = re.sub('\/\*.+?\*\/', '', res.read())
 			
 			try:
 				obj = json.loads(content)
-				return self._parseJSON(obj)
+				return parseJSON(obj)
 			except Exception, e:
 				# log the error and return an empty object
 				logger.error("error parsing %s\n%s\n%s" % (self.url, e, content))
@@ -140,7 +105,7 @@ class Fetcher:
 				team = {}
 				for prop in node.properties:
 					val = prop.content
-					team[prop.name] = self._formatValue(prop.content)
+					team[prop.name] = formatValue(prop.content)
 				obj.append(team)
 				
 			xml.freeDoc()

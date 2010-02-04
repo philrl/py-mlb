@@ -41,7 +41,8 @@ CREATE TABLE `team` (
 	country varchar(30) default null,
 	name_display_short varchar(30) default null,
 	url_cache varchar(30) default null,
-	historical_team_code varchar(30) default null
+	historical_team_code varchar(30) default null,
+	pressbox_url varchar(100) default null
 ) ENGINE = InnoDB;
 
 DROP TABLE IF EXISTS `player`;
@@ -136,7 +137,7 @@ CREATE TABLE `player` (
 	tbf int default 0,
 	bk int default 0,
 	gidp int default 0
-) ENGINE = InnoDB;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_bin;
 
 DROP TABLE IF EXISTS `log_batter`;
 CREATE TABLE `log_batter`(
@@ -160,6 +161,7 @@ CREATE TABLE `log_batter`(
 	RBI int default 0,
 	GO int default 0,
 	GAME_ID varchar(100) default '',
+	GAME_PK int default null,
 	SLG double default 0,
 	OBP double default 0,
 	OPP varchar(3) default '',
@@ -170,7 +172,7 @@ CREATE TABLE `log_batter`(
 	SB int default 0,
 	AVG double default 0,
 	OPP_TEAM_ID int default 0,
-	H2B	 int default 0,
+	H2B int default 0,
 	UNIQUE KEY record (GAME_ID, PLAYER_ID)
 ) ENGINE = InnoDB;
 
@@ -208,6 +210,7 @@ CREATE TABLE `log_pitcher`(
 	W int default 0,
 	GO int default 0,
 	GAME_ID varchar(100) default '',
+	GAME_PK int default null,
 	WHIP double default 0,
 	ER int default 0,
 	OPP varchar(3) default '',
