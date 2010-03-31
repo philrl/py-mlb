@@ -32,9 +32,10 @@ class Fetcher:
 	# batter career and season totals
 	MLB_BATTER_SUMMARY_URL = "http://mlb.mlb.com/lookup/json/named.mlb_bio_hitting_summary.bam" \
 		"?game_type='R'&sort_by='season_asc'&player_id=%player_id%"
+	# scheduling
+	MLB_SCHEDULE_URL = "http://mlb.mlb.com/components/schedule/schedule_%date%.json"
 		
 	# NOT YET USED
-	MLB_SCHEDULE_URL = "http://mlb.mlb.com/components/schedule/schedule_%date%.json"
 	MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam" \
 		"?sit_code=%27h0%27&season=2005&league_id=103&league_id=104"
 	

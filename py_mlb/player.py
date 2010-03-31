@@ -170,23 +170,18 @@ class Player:
 		except:
 			return False
 		
-		sql = 'SELECT * FROM player WHERE player_id = %d' % self.player_id
-		db.execute(sql)
-
-		if db.rowcount == 0:
-			a = {}
-			for attr in [attr for attr in self.__dict__.keys() if not attr.startswith('_')]:
-				if attr.endswith('_date') and getattr(self, attr) == '' \
-				or attr == 'jersey_number' and getattr(self, attr) == '':
-					value = None
-				else:
-					value = getattr(self, attr)
+		a = {}
+		for attr in [attr for attr in self.__dict__.keys() if not attr.startswith('_')]:
+			if attr.endswith('_date') and getattr(self, attr) == '' \
+			or attr == 'jersey_number' and getattr(self, attr) == '':
+				value = None
+			else:
+				value = getattr(self, attr)
+		
+			a[attr] = value
 			
-				a[attr] = value
-				
-			sql = 'INSERT INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
-			db.execute(sql, a.values())
-
+		sql = 'REPLACE INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
+		db.execute(sql, a.values())
 		db.save()
 
 	def load(self, id = None):
