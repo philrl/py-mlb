@@ -37,6 +37,7 @@ class Schedule(dict):
 			f = Fetcher(Fetcher.MLB_SCHEDULE_URL, date=d.strftime("%Y%m%d"))
 			try:
 			 	content = f.fetch(True)
+				if len(content) == 0: continue
 				content = re.sub(r'\t+', '\t', content)
 				content = content.replace('"', '\\"')
 				content = content.replace("'", "\"")
