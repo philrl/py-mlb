@@ -44,7 +44,9 @@ class DB:
 
 		try:
 			cursor.execute(sql, values)
+			self.db.commit()
 		except MySQLdb.Warning, e:
+			print e
 			pass
 			
 		self._count = cursor.rowcount
@@ -54,5 +56,4 @@ class DB:
 		"""
 		Commits all transactions and closes the connection
 		"""
-		self.db.commit()
 		self.db.close()

@@ -62,7 +62,7 @@ class Team:
 				if not attr == 'roster':
 					a['`%s`' % attr] = getattr(self, attr)
 			
-			sql = 'INSERT INTO team (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.keys())))
+			sql = 'REPLACE INTO team (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.keys())))
 			db.execute(sql, a.values())
 		
 		db.save()

@@ -104,10 +104,14 @@ class Player:
 
 		j = f.fetch()
 
-		if self.primary_position == 1:
-			parent = j['mlb_bio_pitching_last_10']['mlb_individual_pitching_game_log']['queryResults']
-		else:
-			parent = j['mlb_bio_hitting_last_10']['mlb_individual_hitting_game_log']['queryResults']
+		try:
+			if self.primary_position == 1:
+				parent = j['mlb_bio_pitching_last_10']['mlb_individual_pitching_game_log']['queryResults']
+			else:
+				parent = j['mlb_bio_hitting_last_10']['mlb_individual_hitting_game_log']['queryResults']
+		except KeyError, e:
+			logger.error('no key for gamelogs found in %s' % f.url)
+			return False
 
 		if int(parent['totalSize']) > 0:
 			records = parent['row']
