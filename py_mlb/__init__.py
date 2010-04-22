@@ -1,6 +1,6 @@
 from logging import getLogger, Handler
 
-__version__ = '1.52'
+__version__ = '1.53'
 
 class NullHandler(Handler):
 	def emit(self, record):
