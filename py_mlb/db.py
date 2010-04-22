@@ -3,6 +3,8 @@ from warnings import simplefilter
 import MySQLdb
 import ConfigParser, os
 
+from py_mlb import logger
+
 class DB:
 	"""Super dumb wrapper around a MySQLdb connection object"""
 	def __init__(self):
@@ -59,7 +61,7 @@ class DB:
 			cursor.execute(sql, values)
 			self.db.commit()
 		except (MySQLdb.Warning, MySQLdb.Error), e:
-			logger.error('%s\nQUERY: %s\nVALUES: %s\n\n' % (msg, query, ','.join([str(v) for v in values])))
+			logger.error('QUERY ERROR:\nQUERY: %s\nVALUES: %s\n\n' % (sql, ','.join([str(v) for v in values])))
 			print e
 			pass
 
