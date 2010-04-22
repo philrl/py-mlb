@@ -23,12 +23,25 @@ class DB:
 			except MySQLdb.Error, e:
 				raise
 
+
 	@property
 	def rowcount(self):
 		"""
 		Returns the number of rows affected/returned by the last query
 		"""
 		return self._count
+
+
+	def savedict(self, dict, table):
+		"""
+		Persists a dict to a specified table, assumes all keys in dict are
+		valid columns in table
+		"""
+		values = [None if x == '' else x for x in dict.values()]
+
+		sql = 'REPLACE INTO %s (%s) VALUES (%s)' % (table, ','.join(dict.keys()), ','.join(['%s'] * len(values)))
+		self.execute(sql, values)
+
 
 	def execute(self, sql, values = None):
 		"""
@@ -45,13 +58,15 @@ class DB:
 		try:
 			cursor.execute(sql, values)
 			self.db.commit()
-		except MySQLdb.Warning, e:
+		except (MySQLdb.Warning, MySQLdb.Error), e:
+			logger.error('%s\nQUERY: %s\nVALUES: %s\n\n' % (msg, query, ','.join([str(v) for v in values])))
 			print e
 			pass
-			
+
 		self._count = cursor.rowcount
 		cursor.close()
-	
+
+
 	def save(self):
 		"""
 		Commits all transactions and closes the connection

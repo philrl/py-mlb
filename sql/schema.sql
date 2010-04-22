@@ -260,3 +260,30 @@ CREATE TABLE `schedule` (
 	away_probable_id int,
 	away_score int default null
 ) ENGINE = InnoDB;
+
+DROP TABLE IF EXISTS transaction;
+CREATE TABLE transaction (
+	conditional_sw varchar(30) default null,
+	effective_date date default null,
+	final_asset varchar(100) default null,
+	final_asset_type varchar(100) default null,
+	from_team varchar(100) default null,
+	from_team_id int default null,
+	name_display_first_last varchar(100) default null,
+	name_display_last_first varchar(100) default null,
+	name_sort varchar(100) default null,
+	note varchar(1000) default null,
+	orig_asset varchar(100) default null,
+	orig_asset_type varchar(100) default null,
+	player varchar(100) default null,
+	player_id int default null,
+	resolution_cd varchar(100) default null,
+	resolution_date date default null,
+	team varchar(100) default null,
+	team_id int default null,
+	trans_date date default null,
+	trans_date_cd varchar(10) default null,
+	transaction_id int not null primary key,
+	type varchar(100) default null,
+	type_cd varchar(100) default null
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_bin;

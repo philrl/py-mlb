@@ -34,6 +34,11 @@ class Fetcher:
 		"?game_type='R'&sort_by='season_asc'&player_id=%player_id%"
 	# scheduling
 	MLB_SCHEDULE_URL = "http://mlb.mlb.com/components/schedule/schedule_%date%.json"
+	# transactions
+	MLB_TRANSACTION_URL = "http://web.minorleaguebaseball.com/lookup/json/named.transaction_all.bam" \
+		"?league_id=104&start_date=%start%&end_date=%end%"
+	# transactions archive - not yet used
+	MLB_TRANSACTION_URL_ARCHIVE = "http://web.minorleaguebaseball.com/gen/stats/jsdata/2005/leagues/l113_200507_tra.js"
 		
 	# NOT YET USED
 	MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam" \

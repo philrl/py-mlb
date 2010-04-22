@@ -24,7 +24,7 @@ class Schedule(dict):
 		days = []
 		
 		if day is None:
-			for d in xrange(1, calendar.mdays[month]):
+			for d in xrange(1, calendar.mdays[month] + 1):
 				days.append(datetime.date(year, month, d))
 		else:
 			days.append(datetime.date(year, month, day))
