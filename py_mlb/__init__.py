@@ -1,6 +1,6 @@
 from logging import getLogger, Handler
 
-__version__ = '1.53'
+__version__ = '1.54'
 
 class NullHandler(Handler):
 	def emit(self, record):
@@ -16,7 +16,7 @@ def formatValue(val):
 		try:
 			val = float(val)
 		except ValueError:
-			val = str(val)
+			val = val.encode('ascii', 'ignore')
 
 	return val
 
@@ -30,7 +30,7 @@ def parseJSON(obj):
 	newobj = {}
 
 	for key, value in obj.iteritems():
-		key = str(key)
+		key = key.encode('ascii', 'ignore')
 
 		if isinstance(value, dict):
 			newobj[key] = parseJSON(value)

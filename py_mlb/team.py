@@ -3,7 +3,7 @@ from fetcher import Fetcher
 from db import DB
 import player
 
-class Team:
+class Team(dict):
 	"""Represents a team"""
 	def __init__(self, attributes):
 		"""
@@ -13,27 +13,26 @@ class Team:
 		attributes - A dict of key/value pairs used to populate the team, passed by the league information
 		"""
 		self.roster = {}
-		for key, value in attributes.iteritems():
-			setattr(self, key, value)
+		for key, value in attributes.iteritems(): self[key] = value
 	
 	def loadRoster(self):
 		"""
 		Calls MLB.com servers to obtain the complete roster for the team. If call fails, '_error' property is set.
 		"""
-		f = Fetcher(Fetcher.MLB_ROSTER_URL, team_id=self.team_id)
+		f = Fetcher(Fetcher.MLB_ROSTER_URL, team_id=self['team_id'])
 		j = f.fetch()
 		
-		if 'roster_40' not in j.keys():
+		if 'roster_40' not in j:
 			self._error = "ERROR on %s: key roster_40 not found (cannot load 40 man roster)" % (f.url)			
-			return
+			return False
 		
 		parent = j['roster_40']['queryResults']
 		
-		if int(parent['totalSize']) > 0:
+		if parent['totalSize'] > 0:
 			for record in parent['row']:
 				player_id = record['player_id']
 				self.roster[player_id] = player.Player(player_id)
-		
+
 
 	def getPlayer(self, player_id):
 		"""
@@ -42,27 +41,19 @@ class Team:
 		Arguments:
 		player_id - The MLB.com player ID
 		"""
-		if player_id in self.roster.keys():
+		if player_id in self.roster:
 			return self.roster[player_id]
 		else:
 			return None
-	
+
+
 	def save(self):
 		try:
 			db = DB()
 		except:
 			return False
-		
-		sql = 'SELECT * FROM team WHERE team_id = %d' % self.team_id
-		db.execute(sql)
 
-		if db.rowcount == 0:
-			a = {}
-			for attr in self.__dict__.keys():
-				if not attr == 'roster':
-					a['`%s`' % attr] = getattr(self, attr)
-			
-			sql = 'REPLACE INTO team (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.keys())))
-			db.execute(sql, a.values())
+		db.savedict(self, 'team')
 		
-		db.save()
+		if len(self.roster) > 1:
+			for player_id, p in self.roster.iteritems(): p.save()

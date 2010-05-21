@@ -34,14 +34,17 @@ class DB:
 		return self._count
 
 
-	def savedict(self, dict, table):
+	def savedict(self, obj, table):
 		"""
 		Persists a dict to a specified table, assumes all keys in dict are
 		valid columns in table
 		"""
-		values = [None if x == '' else x for x in dict.values()]
+		if not isinstance(obj, dict): return False
 
-		sql = 'REPLACE INTO %s (%s) VALUES (%s)' % (table, ','.join(dict.keys()), ','.join(['%s'] * len(values)))
+		keys = ['`%s`' % key for key in obj.keys()]
+		values = [None if value == '' else value for value in obj.values()]
+
+		sql = 'REPLACE INTO %s (%s) VALUES (%s)' % (table, ','.join(keys), ','.join(['%s'] * len(values)))
 		self.execute(sql, values)
 
 
@@ -61,16 +64,15 @@ class DB:
 			cursor.execute(sql, values)
 			self.db.commit()
 		except (MySQLdb.Warning, MySQLdb.Error), e:
-			logger.error('QUERY ERROR:\nQUERY: %s\nVALUES: %s\n\n' % (sql, ','.join([str(v) for v in values])))
-			print e
+			logger.error('QUERY ERROR: %s\nQUERY: %s\nVALUES: %s\n\n' % (e, sql, ','.join([str(v) for v in values])))
 			pass
 
 		self._count = cursor.rowcount
 		cursor.close()
 
 
-	def save(self):
+	def close(self):
 		"""
-		Commits all transactions and closes the connection
+		Closes the database connection
 		"""
 		self.db.close()

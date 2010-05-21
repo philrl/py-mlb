@@ -5,7 +5,7 @@ import libxml2
 import urllib2
 import sys
 
-from . import logger, parseJSON, formatValue
+from py_mlb import logger, parseJSON, formatValue
 
 class Fetcher:
 	"""
@@ -75,16 +75,17 @@ class Fetcher:
 
 		try:
 			res = urllib2.urlopen(req)
-		except urllib2.URLError, e:
+			content = res.read()
+		except (urllib2.URLError, IOError), e:
 			logger.error("error fetching %s" % self.url)
 			return {}
 
 		if returnRaw:
-			return res.read()
+			return content
 
 		if reqType == 'JSON':
 			# remove code comments that MLB puts in the response
-			content = re.sub('\/\*.+?\*\/', '', res.read())
+			content = re.sub('\/\*.+?\*\/', '', content)
 			
 			try:
 				obj = json.loads(content)
@@ -100,7 +101,7 @@ class Fetcher:
 			object and then that should be traversed elsewhere.
 			"""
 			obj = []
-			xml = libxml2.parseDoc(res.read())
+			xml = libxml2.parseDoc(content)
 			ctxt = xml.xpathNewContext()
 			nodes = ctxt.xpathEval("/mlb/leagues/league[@club='mlb']/teams/team")
 			
@@ -118,4 +119,4 @@ class Fetcher:
 			ctxt.xpathFreeContext()
 			return obj
 		elif reqType == 'HTML':
-			return res.read()
+			return content

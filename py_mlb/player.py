@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 from fetcher import Fetcher
-from . import logger
+from py_mlb import logger
 from db import DB
 
+import logging
 import datetime
 
-class Player:
+class Player(dict):
 	"""A MLB player"""
 	def __init__(self, player_id = None):
 		"""
@@ -15,30 +16,21 @@ class Player:
 		player_id : The MLB.com ID attribute for the given player
 		"""
 		self.player_id = player_id
-		self._logs = {}
-		self._totals = {}
-		self._categories = []
+		# game logs
+		self.logs = {}
+		# yearly totals
+		self.totals = {}
+		# career totals
+		self.career = {}
 		
-		if self.player_id is not None:
-			self.load()
+		if self.player_id is not None: self.load()
 
-	def getAttributes(self):
-		"""
-		Returns a list of player attribute names e.g. name_display_last_first
-		"""
-		return [attr for attr in self.__dict__.keys() if not attr.startswith('_')]
 
-	def getCategories(self):
-		"""
-		Returns a list of statistical categories
-		"""
-		return self._categories
-	
 	def loadYearlies(self):
 		"""
 		Loads yearly and career totals for a player
 		"""
-		if self.primary_position == 1:
+		if self['primary_position'] == 1:
 			f = Fetcher(Fetcher.MLB_PITCHER_SUMMARY_URL, player_id=self.player_id)
 		else:
 			f = Fetcher(Fetcher.MLB_BATTER_SUMMARY_URL, player_id=self.player_id)
@@ -46,43 +38,35 @@ class Player:
 		j = f.fetch()
 		
 		# if the JSON object is empty, bail
-		if len(j.keys()) == 0:
-			return
+		if len(j.keys()) == 0: return
 		
 		# get yearly totals
-		if self.primary_position == 1:
+		if self['primary_position'] == 1:
 			parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_season']['queryResults']
 		else:
 			parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_season']['queryResults']
 		
-		if int(parent['totalSize']) > 0:
+		if parent['totalSize'] > 0:
 			records = parent['row']
 
 			# accounting for player with only one row
-			if isinstance(records, dict):
-				row = records
-				records = []
-				records.append(row)
+			if type(records) is dict: records = [records]
 			
 			for row in records:
 				log = {}
-				for key, value in row.iteritems():
-					log[key] = value
-
-				self._totals[int(row['season'])] = log
+				for key, value in row.iteritems(): log[key] = value
+				self.totals[row['season']] = log
 			
-		# get career totals and set them as instance attributes
-		if self.primary_position == 1:
+		# get career totals
+		if self['primary_position'] == 1:
 			parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_career']['queryResults']
 		else:
 			parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_career']['queryResults']
 			
-		if int(parent['totalSize']) > 0:
-			records = parent['row']
-			for key, value in records.iteritems():
-				setattr(self, key, value)
-				self._categories.append(key)
-			
+		if parent['totalSize'] > 0:
+			for key, value in parent['row'].iteritems(): self.career[key] = value
+
+
 	def loadGamelogs(self, year = None):
 		"""
 		Loads gamelogs for the player for a given year
@@ -90,22 +74,20 @@ class Player:
 		Arguments:
 		year : The season desired. Defaults to the current year if not specified
 		"""
-		if year is None:
-			year = datetime.datetime.now().year
+		if year is None: year = datetime.datetime.now().year
+		if year not in self.logs: self.logs[year] = []
 		
-		if 'primary_position' not in self.__dict__:
-			logger.error("no primary position attribute for " % self.__dict__)
+		if 'primary_position' not in self:
+			logger.error("no primary position attribute for " % self)
 			return False
-		
-		if self.primary_position == 1:
-			f = Fetcher(Fetcher.MLB_PITCHER_URL, player_id=self.player_id, year=year)
-		else:
-			f = Fetcher(Fetcher.MLB_BATTER_URL, player_id=self.player_id, year=year)
 
+		url = Fetcher.MLB_PITCHER_URL if self['primary_position'] == 1 else Fetcher.MLB_BATTER_URL
+		
+		f = Fetcher(url, player_id=self.player_id, year=year)
 		j = f.fetch()
 
 		try:
-			if self.primary_position == 1:
+			if self['primary_position'] == 1:
 				parent = j['mlb_bio_pitching_last_10']['mlb_individual_pitching_game_log']['queryResults']
 			else:
 				parent = j['mlb_bio_hitting_last_10']['mlb_individual_hitting_game_log']['queryResults']
@@ -113,34 +95,21 @@ class Player:
 			logger.error('no key for gamelogs found in %s' % f.url)
 			return False
 
-		if int(parent['totalSize']) > 0:
+		if parent['totalSize'] > 0:
 			records = parent['row']
 
 			# accounting for player with only one row
-			if isinstance(records, dict):
-				row = records
-				records = []
-				records.append(row)
-		
-			for row in records:
-				log = {}
-			
-				for key in row.keys():
-					key = str(key)
-					val = str(row[key])
-					key = key.upper()
-					if val.isdigit():
-						log[key] = int(val)
-					else:
-						try:
-							log[key] = float(val)
-						except ValueError:
-							log[key] = str(val)
-			
-				if year not in self._logs:
-					self._logs[year] = []
+			if type(records) is dict: records = [records]
 
-				self._logs[year].append(log)
+			for row in records:
+				log = {}	
+				for key, value in row.iteritems(): log[key] = value
+				
+				# some fixes
+				if 'era' in log and (log['era'] == '-.--' or log['era'] == '*.**'): log['era'] = None
+				
+				self.logs[year].append(log)
+
 
 	def saveGamelogs(self):
 		"""
@@ -151,20 +120,14 @@ class Player:
 		except:
 			return False
 
-		for year in self._logs.keys():
-			for log in self._logs[year]:
-				table = 'log_pitcher' if self.primary_position == 1 else 'log_batter'
-				sql = 'SELECT * FROM %s WHERE GAME_ID = \'%s\' AND PLAYER_ID = \'%s\'' % (table, log['GAME_ID'], self.player_id)
-				db.execute(sql)
+		# need to check for empty and set to None
+		for year, logs in self.logs.iteritems():
+			for log in logs:
+				table = 'log_pitcher' if self['primary_position'] == 1 else 'log_batter'
+				log['player_id'] = self['player_id']
+				db.savedict(log, table)
 
-				if db.rowcount == 0:
-					log['PLAYER_ID'] = self.player_id
 
-					sql = 'INSERT INTO %s (%s) VALUES (%s)' % (table, ','.join(log.keys()), ','.join(['%s'] * len(log.keys())))
-					db.execute(sql, log.values())
-
-		db.save()
-				
 	def save(self):
 		"""
 		Saves player information to database
@@ -173,20 +136,9 @@ class Player:
 			db = DB()
 		except:
 			return False
-		
-		a = {}
-		for attr in [attr for attr in self.__dict__.keys() if not attr.startswith('_')]:
-			if attr.endswith('_date') and getattr(self, attr) == '' \
-			or attr == 'jersey_number' and getattr(self, attr) == '':
-				value = None
-			else:
-				value = getattr(self, attr)
-		
-			a[attr] = value
-			
-		sql = 'REPLACE INTO player (%s) VALUES (%s)' % (','.join(a.keys()), ','.join(['%s'] * len(a.values())))
-		db.execute(sql, a.values())
-		db.save()
+
+		db.savedict(self, 'player')
+
 
 	def load(self, id = None):
 		"""
@@ -197,6 +149,7 @@ class Player:
 		"""
 		if id is None and self.player_id is not None:
 			id = self.player_id
+			self['player_id'] = self.player_id
 		else:
 			raise Exception('No player_id specified')
 
@@ -224,7 +177,19 @@ class Player:
 			logger.error('ERROR on %s: key %s not found\n%s' % (f.url, e, j))
 			return False
 
-		for key, value in records.iteritems():
-			setattr(self, key, value)
-
+		for key, value in records.iteritems(): self[key] = value
 		self.loadYearlies()
+
+
+if __name__ == '__main__':
+	from pprint import pprint
+	#log = logging.getLogger('py_mlb')
+	#log.setLevel(logging.DEBUG)
+	#log.addHandler(logging.StreamHandler())
+	
+	batter = Player(400085)
+	pitcher = Player(433587)
+	pitcher.loadYearlies()
+	pitcher.loadGamelogs()
+	pitcher.save()
+	pitcher.saveGamelogs()

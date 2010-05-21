@@ -81,4 +81,4 @@ class Schedule(dict):
 				sql = 'REPLACE INTO schedule (%s) VALUES (%s)' % (','.join(game.keys()), ','.join(['%s'] * len(game.values())))
 				db.execute(sql, game.values())
 			
-		db.save()
+		db.close()
