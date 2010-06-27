@@ -77,7 +77,6 @@ class Fetcher:
 			res = urllib2.urlopen(req)
 			content = res.read()
 		except (urllib2.URLError, IOError), e:
-			logger.error("error fetching %s" % self.url)
 			return {}
 
 		if returnRaw:

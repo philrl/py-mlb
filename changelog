@@ -1,0 +1,4 @@
+1.55
+-
+* fix for key change in MLBAM hitter log object
+* removed redundant exception messages on URL fetch fail

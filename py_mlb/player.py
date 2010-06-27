@@ -90,7 +90,10 @@ class Player(dict):
 			if self['primary_position'] == 1:
 				parent = j['mlb_bio_pitching_last_10']['mlb_individual_pitching_game_log']['queryResults']
 			else:
-				parent = j['mlb_bio_hitting_last_10']['mlb_individual_hitting_game_log']['queryResults']
+				if 'mlb_individual_hitting_last_x_total' in j:
+					parent = j['mlb_individual_hitting_last_x_total']['mlb_individual_hitting_game_log']['queryResults']
+				else:
+					parent = j['mlb_bio_hitting_last_10']['mlb_individual_hitting_game_log']['queryResults']
 		except KeyError, e:
 			logger.error('no key for gamelogs found in %s' % f.url)
 			return False
